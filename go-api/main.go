@@ -54,6 +54,7 @@ func byeWorld(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
+	fmt.Println("test")
 	metrics := promhttp.Handler()
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", helloWorld)
