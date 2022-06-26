@@ -1,0 +1,14 @@
+version: '3.4'
+
+services:
+  go:
+    build:
+      context: ./go-api
+      target: development
+    container_name: challe-chara2022-api
+    stdin_open: true
+    tty: true
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./go-api:/api
