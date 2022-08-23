@@ -1,0 +1,59 @@
+# circleciのバージョン。後述するorbsを利用するためには2.1以上が必要
+version: 2.1
+
+orbs:
+    # circleci/aws-ecr@6.1.0というorbをaws-ecrというaliasをつけて扱う
+    aws-ecr: circleci/aws-ecr@6.1.0
+    aws-ecs: circleci/aws-ecs@0.0.8
+
+jobs:
+  build:
+    working_directory: ~/repo 
+    docker:
+      - image: cimg/go:1.18
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - go-mod-v4-{{ checksum "go-api/go.sum" }}
+      - run:
+          name: Install Dependencies
+          command: cd go-api && go mod tidy 
+      - save_cache:
+          key: go-mod-v4-{{ checksum "go-api/go.sum" }}
+          paths:
+            - "/go/pkg/mod"
+      - run:
+          name: Run tests
+          command: cd go-api && go test -v
+
+workflows:
+    # build_and_push_imageという名前のworkflowを定義
+    build_and_push_image:
+        # workflowで実行するjobの順番を定義
+        jobs:
+        - build  # デプロイ操作前にテストを実行
+        - aws-ecr/build-and-push-image:
+            requires:
+                - build # テストに成功したときだけデプロイ操作に移るようにする
+            region: AWS_REGION
+            account-url: AWS_ECR_ACCOUNT_URL
+            repo: 'cicdtest'
+            tag: "${CIRCLE_SHA1}"
+            filters:    # mainブランチへのpushのときだけデプロイされるように制限する
+                branches:
+                    only:
+                    - main
+        
+        - aws-ecs/deploy-service-update:
+            # aws-ecr/build-and-push-imageのjobをPASSしないとこのjobを実行しないようにする
+            requires:
+                - aws-ecr/build-and-push-image
+            family: 'testserver'
+            cluster-name: 'circleciTest'
+            service-name: 'CircleCItestService'
+            container-image-name-updates: 'container=testserverContainer,tag=${CIRCLE_SHA1}'
+            filters:    # mainブランチへのpushのときだけデプロイされるように制限する
+                branches:
+                    only:
+                    - main
