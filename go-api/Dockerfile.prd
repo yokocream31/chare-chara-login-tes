@@ -17,12 +17,14 @@ RUN go mod download
 # クロスコンパイルによるbuild
 # -ldflags : リンク呼び出しで渡すフラグを指定（プログラム中の値を変えたりも可能）
 # 参考サイト：https://devlights.hatenablog.com/entry/2020/10/21/192615#ldflags-オプションを付けてビルド
-RUN go build -ldflags "-s -m" -o main ./main.go
+RUN go build -ldflags "-s -w" -o main ./main.go
 
 # distrolessは、Googleが提供している必要最小限の依存のみが含まれるDebian10(buster)を基に作成されたコンテナイメージ
 FROM gcr.io/distroless/static-debian11:latest
 
 WORKDIR /
+
+COPY --from=builder /build/main /main
 
 # Dockerコンテナを非rootユーザで実行する
 USER nonroot
