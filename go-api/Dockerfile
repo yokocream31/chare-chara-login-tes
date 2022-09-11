@@ -1,22 +1,5 @@
-# For production
-FROM golang:1.18 as production
-
-RUN mkdir /api
-WORKDIR /api
-
-ENV ENV=production
-
-COPY go.mod go.sum ./
-RUN go mod download && go mod verify
-
-COPY . .
-RUN go build -v
-
-EXPOSE 8080
-CMD ["./main"]
-
 # For development
-FROM golang:1.18 as development
+FROM golang:1.19
 
 RUN mkdir /api
 WORKDIR /api
