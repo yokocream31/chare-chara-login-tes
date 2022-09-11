@@ -4,7 +4,6 @@ services:
   api:
     build:
       context: ./go-api
-      target: development
     container_name: challe-chara2022-api
     stdin_open: true
     tty: true

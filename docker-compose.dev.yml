@@ -1,0 +1,39 @@
+version: '3.4'
+
+services:
+  api:
+    build:
+      context: ./go-api
+    container_name: challe-chara2022-api
+    stdin_open: true
+    tty: true
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./go-api:/api
+  couch_db:
+    image: couchbase
+    container_name: qmatta_couchdb
+    environment:  
+      - CLUSTER_NAME=qmatta
+      - COUCHBASE_ADMINISTRATOR_USERNAME=root
+      - COUCHBASE_ADMINISTRATOR_PASSWORD=root
+      - COUCHBASE_BUCKET=qmatta
+    ports:
+      - "8091:8091"
+    tty: true
+    stdin_open: true
+    volumes:
+      # データの永続化
+      - ./db/db_data:/var/lib/couchdb/data
+
+  sync-gateway:
+    image: couchbase/sync-gateway:1.4.0-2
+    ports:
+      - "4984"
+    volumes:
+      - ./sync-gateway-config.json:/etc/sync_gateway/config.json
+
+# volumeを定義
+volumes:
+  db_data:
