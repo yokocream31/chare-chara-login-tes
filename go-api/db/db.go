@@ -1,50 +1,37 @@
 package db
 
 import (
-	"fmt"
+	"context"
 	"os"
-	"time"
+	"fmt"
 
-	"github.com/couchbase/gocb/v2"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
+	"go.mongodb.org/mongo-driver/mongo/readpref"
+	// "go.mongodb.org/mongo-driver/bson"
+	// "go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-var Bucket *gocb.Bucket
+var MongoClient *mongo.Client
+
 
 // Databaseの初期化
 func InitDB() {
 
-	// Update this to your cluster details
-	bucketName := os.Getenv("COUCHBASE_BUCKET")
-	username := os.Getenv("COUCHBASE_ADMINISTRATOR_USERNAME")
-	password := os.Getenv("COUCHBASE_ADMINISTRATOR_PASSWORD")
-	host := os.Getenv("COUCHBASE_HOST")
-	scheme := os.Getenv("COUCHBSE_SCHEME")
-
-	// エラーと警告をログとして記録
-	gocb.SetLogger(gocb.DefaultStdioLogger())
-
-	// Initialize the Connection
-	// クラスターへの接続
-	cluster, err := gocb.Connect(scheme+host, gocb.ClusterOptions{
-		Authenticator: gocb.PasswordAuthenticator{
-			Username: username,
-			Password: password,
-		},
-		SecurityConfig: gocb.SecurityConfig{
-			TLSSkipVerify: true,
-		},
-	})
+	// 空のコンテキストを作成
+	ctx := context.Background()
+	// Create a new client and connect to the server
+	MongoClient, err := mongo.Connect(ctx, options.Client().ApplyURI(os.Getenv("MONGO_URI")))
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println("db connected: ", *cluster)
+	defer MongoClient.Disconnect(ctx)
 
-	// バケットへの参照の取得
-	Bucket = cluster.Bucket(bucketName)
-	// バケットに接続され確実に利用可能になるまでwait
-	err = Bucket.WaitUntilReady(5*time.Second, nil)
-	if err != nil {
-		panic(err)
-	}
-
+	// Ping the server to DB
+    err = MongoClient.Ping(ctx, readpref.Primary())
+    if err != nil {
+        fmt.Println("connection error:", err)
+    } else {
+        fmt.Println("connection success:")
+    }
 }

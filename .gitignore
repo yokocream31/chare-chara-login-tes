@@ -19,3 +19,7 @@ go-api/tmp
 
 # DS file
 .DS_Store
+
+db
+db_data
+configdb
