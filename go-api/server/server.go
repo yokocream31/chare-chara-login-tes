@@ -13,13 +13,12 @@ import (
 // 初期化
 func Init() {
 
+	// ルーティング
 	r := setRouter()
-
 	// Server Run (Port 8080)
 	if err := r.Run(":" + os.Getenv("PORT")); err != nil {
 		panic(err)
 	}
-
 }
 
 // ルーティング設定
@@ -52,7 +51,6 @@ func setRouter() *gin.Engine {
 		// userのアイコンを取得
 		user_group.GET("icon/:user_id", ctrl.GetUserIcon)	
 	}
-
 	return r
 }
 

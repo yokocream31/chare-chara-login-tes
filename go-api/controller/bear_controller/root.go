@@ -23,8 +23,8 @@ type BearHistoryResponse struct {
 }
 
 type BearCustomResponse struct {
-	Bear_icon []byte `json:"bearIcon"`
-	Bear_tone uint `json:"bearTone"`
+	BearIcon []byte `json:"bearIcon"`
+	BearTone uint `json:"bearTone"`
 }
 
 
@@ -90,7 +90,7 @@ func (bc BearController) GetCustom(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"result": err.Error()})
 		return
 	} else {
-		response := BearCustomResponse{Bear_icon: buf, Bear_tone: 1}
+		response := BearCustomResponse{BearIcon: buf, BearTone: 1}
 		c.JSON(http.StatusOK, response)
 	}
 }

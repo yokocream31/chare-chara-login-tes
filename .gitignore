@@ -23,3 +23,4 @@ go-api/tmp
 db
 db_data
 configdb
+mongo_init

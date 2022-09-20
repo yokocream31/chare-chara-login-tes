@@ -28,6 +28,8 @@ services:
     tty: true
     stdin_open: true
     volumes:
+      # 初期データを投入するシェルスクリプトが格納されているdir
+      - ./db/mongo_init:/docker-entrypoint-initdb.d
       # データの永続化
       - ./db_data:/data/db
       - ./configdb:/data/configdb
