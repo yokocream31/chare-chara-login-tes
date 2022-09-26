@@ -3,6 +3,7 @@ package main
 import(
 	"context"
 	"fmt"
+	"time"
 
 	"back-challe-chara2022/db"
 	"back-challe-chara2022/entity/db_entity"
@@ -116,7 +117,7 @@ func main() {
 		context.TODO(),
 		bson.M{"_id": communityId},
 		bson.D{
-			{"$set", bson.D{{"member", user_id_array}}},
+			{"$set", bson.D{{"member", user_id_array}, {"updatedAt", time.Now()}}},
 		},
 	)
 	if err5 != nil {
