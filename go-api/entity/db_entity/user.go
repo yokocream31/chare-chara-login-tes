@@ -8,7 +8,7 @@ import (
 )
 
 type Role struct {
-	RoleName string `json:"roleName"` // [supervisor, manager, general_user]
+	RoleName string `json:"roleName"` // [admin, manager, general_user]
 	Permission uint `json:"permission"` // 権限を３桁 ２進数 → 10進数にしたもの (rwx)
 }
 
@@ -19,7 +19,7 @@ type User struct {
 	Password string `json:"password" bson:"password"`
 	Icon string	 `json:"icon" bson:"icon"`
 	Profile string `json:"profile" bson:"profile"`
-	CommunityId string `json:"communityId" bson:"communityId"`
+	CommunityId primitive.ObjectID `json:"communityId" bson:"communityId"`
 	Status string `json:"status" bson:"status"`
 	Role Role `json:"role" bson:"role"`
 	BearIcon primitive.ObjectID `json:"bearIcon" bson:"bearIcon"`
