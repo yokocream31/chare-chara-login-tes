@@ -2,6 +2,8 @@ package bear_controller
 
 import (
 	"back-challe-chara2022/entity/request_entity/body"
+	// "back-challe-chara2022/db"
+	// "back-challe-chara2022/entity/db_entity"
 
 	"net/http"
 	"fmt"
@@ -9,6 +11,8 @@ import (
 	"math/rand"
 	"io/ioutil"
 	
+	// "go.mongodb.org/mongo-driver/bson"
+	// "go.mongodb.org/mongo-driver/bson/primitive"
 	"github.com/gin-gonic/gin"
 )
 

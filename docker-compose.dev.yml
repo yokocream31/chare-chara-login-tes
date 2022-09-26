@@ -7,6 +7,8 @@ services:
     container_name: challe-chara2022-api
     stdin_open: true
     tty: true
+    ports:
+      - "8080:8080"
     environment:
       MONGO_URI: mongodb://root:root@mongo:27017/?maxIdleTimeMS=30&maxPoolSize=20
       GO111MODULE: "on"

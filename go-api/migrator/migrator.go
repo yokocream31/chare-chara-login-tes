@@ -84,6 +84,24 @@ func main() {
 		fmt.Println("Successfully inserting community")
 	}
 
+	// stampCollection init
+	stampCollection := db.MongoClient.Database("insertDB").Collection("stamps")
+	stampId	:= primitive.NewObjectID()
+	docStamp := &db_entity.Stamp{
+		StampId: stampId,
+		StampName: "test",
+		StampImg: "img_dir/test.png",
+		Status: "ぬまった",
+	}
+
+	_, err6 := stampCollection.InsertOne(context.TODO(), docStamp) // ここでMarshalBSON()される
+	if err3 != nil {
+		fmt.Println("Error inserting bear")
+        panic(err6)
+    } else {
+		fmt.Println("Successfully inserting stamp")
+	}
+
 	// userCollection init
 	userCollection := db.MongoClient.Database("insertDB").Collection("users")
 	var question_id_array []primitive.ObjectID
@@ -103,6 +121,7 @@ func main() {
 		Question: question_id_array,
 		Like: like_id_array,
 	}
+	fmt.Println(*docUser)
 
 	_, err4 := userCollection.InsertOne(context.TODO(), docUser) // ここでMarshalBSON()される
 	if err4 != nil {
@@ -113,6 +132,7 @@ func main() {
 	}
 
 	user_id_array = append(user_id_array, docUser.UserId)
+	fmt.Println(docUser.UserId)
 	result, err5 := CommunityCollection.UpdateOne(
 		context.TODO(),
 		bson.M{"_id": communityId},
@@ -125,4 +145,6 @@ func main() {
 	} else {
 		fmt.Printf("Updated %v Documents!\n", result.ModifiedCount)
 	}
+
+
 }
