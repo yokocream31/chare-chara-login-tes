@@ -4,10 +4,11 @@ import (
 	"back-challe-chara2022/controller/bear_controller"
 	"back-challe-chara2022/controller/user_controller"
 	
-	"net/http"
+	"time"
 	"os"
 	
 	"github.com/gin-gonic/gin"
+	"github.com/gin-contrib/cors"
 )
 
 // 初期化
@@ -27,7 +28,34 @@ func setRouter() *gin.Engine {
 	r := gin.Default()
 
 	// ミドルウェアの設定
-	r.Use(CORSMiddleware())
+	r.Use(cors.New(cors.Config{
+		// アクセスを許可したいアクセス元
+		AllowOrigins: []string{
+			"http://localhost", 
+			"http://localhost:3000",
+		},
+		// アクセスを許可したいHTTPメソッド
+		AllowMethods: []string{
+			"POST",
+			"GET",
+			"PATCH",
+			"DELETE",
+			"OPTIONS",
+		},
+		// 許可したいHTTPリクエストヘッダ
+		AllowHeaders: []string{
+			"Access-Control-Allow-Credentials",
+			"Access-Control-Allow-Headers",
+			"Content-Type",
+			"Content-Length",
+			"Accept-Encoding",
+			"Authorization",
+		},
+		// cookieなどの情報を必要とするかどうか
+		AllowCredentials: true,
+		// preflightリクエストの結果をキャッシュする時間
+		MaxAge: 24 * time.Hour,
+	  }))
 
 	//ルーティング
 	bear_group := r.Group("bear")
@@ -52,28 +80,5 @@ func setRouter() *gin.Engine {
 		user_group.GET("icon/:user_id", ctrl.GetUserIcon)	
 	}
 	return r
-}
-
-// CORSリクエストのためのミドルウェア
-func CORSMiddleware() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		// リクエストの送信元の指定
-		c.Writer.Header().Set("Access-Control-Allow-Origin", "http://localhost")
-		// 資格情報（Cookie、認証ヘッダー、TLSクライアント証明書）の送信をOKするか
-		c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
-		// リクエスト間に使用できるHTTPヘッダーを指定
-		c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, accept, origin, Cache-Control, X-Requested-With")
-		// 使用できるメソッドを指定
-		c.Writer.Header().Set("Access-Control-Allow-Methods", "POST, GET, DELETE, PATCH, OPTIONS")
-
-		// OPTIONSメソッドは，指定されたURLまたはサーバーの許可されている通信オプションをリクエストする
-		if c.Request.Method == "OPTIONS" {
-			c.AbortWithStatus(http.StatusNoContent)
-			return
-		}
-
-		// コンテキストに設定を書き込んだのでポインタを遷移（線形リスト）
-		c.Next()
-	}
 }
 
