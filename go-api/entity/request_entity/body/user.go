@@ -1,5 +1,5 @@
 package body
 
 type PatchUserStatusBody struct {
-	StampId uint `json:"stampId" binding:"required"`
+	StampId string `json:"stampId" binding:"required"`
 }

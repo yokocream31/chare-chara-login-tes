@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"context"
+	"time"
 	
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -18,10 +19,6 @@ import (
 )
 
 type UserController struct {}
-
-type UserStatusResponse struct {
-	StatusId string `json:"statusId"`
-}
 
 type UserIconResponse struct {
 	UserIcon []byte `json:"userIcon"`
@@ -42,23 +39,45 @@ func (uc UserController) PatchUserStatus(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"result": err.Error()})
 		return
 	}
+	fmt.Println(request.StampId) // debug print
 
-	// userCollection := db.MongoClient.Database("insertDB").Collection("users")
-	// var doc db_entity.User
-	// // 検索条件
-	// filter := bson.D{{"UserId", user_id}}
-	// // query the database
-	// if err := userCollection.FindOne(context.TODO(), filter).Decode(&doc); err != nil {
-	// 	c.JSON(http.StatusBadRequest, gin.H{"result": err.Error()})
-	// 	return
-	// } else if err == mongo.ErrNoDocuments {
-	// 	fmt.Printf("No document was found with the user_id")
-	// 	c.JSON(http.StatusOK, gin.H{})
-	// 	return
-	// }
+	var doc_stamp bson.M
+	// 検索条件
+	stampId, _ := primitive.ObjectIDFromHex(request.StampId)
+	filter_stamp := bson.D{{"_id", stampId}}
+	fmt.Println(filter_stamp)
+	// query to stampCollection
+	stampCollection := db.MongoClient.Database("insertDB").Collection("stamps")
+	if err := stampCollection.FindOne(context.TODO(), filter_stamp, 
+		options.FindOne().SetProjection(bson.M{"status": 1, "_id": 0})).Decode(&doc_stamp); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"result": err.Error()})
+	} else if err == mongo.ErrNoDocuments {
+		fmt.Printf("No document was found with the stamp_id")
+		c.JSON(http.StatusOK, gin.H{})
+		return
+	}
 
-	response := UserStatusResponse{StatusId: "ぬまり中"}
-	c.JSON(http.StatusOK, response)
+	fmt.Println(doc_stamp)
+	// update raw data
+	update_fields := bson.M{
+		"$set": bson.M{
+			"status": doc_stamp["status"].(string),
+			"updatedAt": time.Now(),
+		},
+	}
+	filter := bson.M{"_id": user_id}
+	userCollection := db.MongoClient.Database("insertDB").Collection("users")
+	result, err := userCollection.UpdateOne(context.TODO(), filter, update_fields)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"result": err.Error()})
+		return
+	} else if err == mongo.ErrNoDocuments {
+		fmt.Printf("No document was found with the user_id")
+		c.JSON(http.StatusOK, gin.H{})
+		return
+	}
+
+	c.JSON(http.StatusOK, result)
 	return
 }
 
@@ -117,8 +136,25 @@ func (uc UserController) GetUserIcon(c *gin.Context) {
 	user_id, _ := primitive.ObjectIDFromHex(c.Param("user_id"))
 	fmt.Println(user_id) // debug message
 
+	var err error
+	userCollection := db.MongoClient.Database("insertDB").Collection("users")
+	var doc bson.M
+	// 検索条件
+	filter := bson.M{"_id": user_id}
+	// query
+	if err := userCollection.FindOne(context.TODO(), filter, 
+		options.FindOne().SetProjection(bson.M{"icon": 1, "_id": 0})).Decode(&doc); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"result": err.Error()})
+		return
+	} else if err == mongo.ErrNoDocuments {
+		fmt.Printf("No document was found with the user_id")
+		c.JSON(http.StatusOK, gin.H{})
+		return
+	}
+
 	// 画像のbyteデータ読み込み
-	buf, err := ioutil.ReadFile("img_dir/test.png")
+	url := doc["icon"].(string)
+	buf, err := ioutil.ReadFile(url)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"result": err.Error()})
 		return
