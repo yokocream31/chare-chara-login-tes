@@ -86,16 +86,23 @@ func main() {
 
 	// stampCollection init
 	stampCollection := db.MongoClient.Database("insertDB").Collection("stamps")
-	stampId	:= primitive.NewObjectID()
-	docStamp := &db_entity.Stamp{
-		StampId: stampId,
-		StampName: "test",
-		StampImg: "img_dir/test.png",
-		Status: "ぬまった",
-	}
+	docStamp := []interface{}{
+		&db_entity.Stamp{
+			StampId: primitive.NewObjectID(),
+			StampName: "test",
+			StampImg: "img_dir/test.png",
+			Status: "ぬまった",
+		},
+		&db_entity.Stamp{
+			StampId: primitive.NewObjectID(),
+			StampName: "test",
+			StampImg: "img_dir/test.png",
+			Status: "スッキリ",
+		},
 
-	_, err6 := stampCollection.InsertOne(context.TODO(), docStamp) // ここでMarshalBSON()される
-	if err3 != nil {
+	}
+	_, err6 := stampCollection.InsertMany(context.TODO(), docStamp) // ここでMarshalBSON()される
+	if err6 != nil {
 		fmt.Println("Error inserting bear")
         panic(err6)
     } else {
@@ -146,5 +153,24 @@ func main() {
 		fmt.Printf("Updated %v Documents!\n", result.ModifiedCount)
 	}
 
+	// communicationCollection init
+	communicationCollection := db.MongoClient.Database("insertDB").Collection("communications")
+	messages := []db_entity.Messages{ 
+		db_entity.Messages{ Id: 1, Text: "Hello" }, 
+		db_entity.Messages{ Id: 2, Text: "World" }, 
+	}
+	docCommunication := &db_entity.Communication {
+		Id: primitive.NewObjectID(),
+		UserId: docUser.UserId,
+		Messages: messages,
+	}
 
+	_, err7 := communicationCollection.InsertOne(context.TODO(), docCommunication) // ここでMarshalBSON()される
+	if err7 != nil {
+		fmt.Println("Error inserting Communication")
+        panic(err7)
+    } else {
+		fmt.Println("Successfully inserting communications")
+	}
+	
 }

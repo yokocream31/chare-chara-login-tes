@@ -87,7 +87,7 @@ func (m *Messages) MarshalBSON() ([]byte, error) {
 
 type Communication struct {
 	Id primitive.ObjectID `json:"id" bson:"_id"`
-	UserId User `json:"userId" bson:"userId"`
+	UserId primitive.ObjectID `json:"userId" bson:"userId"`
 	Messages []Messages `json:"messages" bson:"messages"`
 	CreatedAt  time.Time  `json:"createdAt" bson:"createdAt"`
 	UpdatedAt  time.Time  `json:"updatedAt" bson:"updatedAt"`
