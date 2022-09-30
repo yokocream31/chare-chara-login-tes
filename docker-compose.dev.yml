@@ -9,32 +9,30 @@ services:
     tty: true
     ports:
       - "8080:8080"
-    environment:
-      MONGO_URI: mongodb://root:root@mongo:27017/?maxIdleTimeMS=30&maxPoolSize=20
-      GO111MODULE: "on"
-      PORT: "8080"
     volumes:
       - ./go-api:/api
-
-  
-  mongo:
-    image: mongo:latest
-    restart: always
-    environment:
-        MONGO_INITDB_ROOT_USERNAME: root
-        MONGO_INITDB_ROOT_PASSWORD: root
+  couch_db:
+    image: couchbase
+    container_name: qmatta_couchdb
+    environment:  
+      - CLUSTER_NAME=qmatta
+      - COUCHBASE_ADMINISTRATOR_USERNAME=root
+      - COUCHBASE_ADMINISTRATOR_PASSWORD=root
+      - COUCHBASE_BUCKET=qmatta
     ports:
-      - 27017:27017
-    container_name: mongo
-    hostname: mongo
+      - "8091:8091"
     tty: true
     stdin_open: true
     volumes:
-      # 初期データを投入するシェルスクリプトが格納されているdir
-      - ./db/mongo_init:/docker-entrypoint-initdb.d
       # データの永続化
-      - ./db_data:/data/db
-      - ./configdb:/data/configdb
+      - ./db/db_data:/var/lib/couchdb/data
+
+  sync-gateway:
+    image: couchbase/sync-gateway:1.4.0-2
+    ports:
+      - "4984"
+    volumes:
+      - ./sync-gateway-config.json:/etc/sync_gateway/config.json
 
 # volumeを定義
 volumes:

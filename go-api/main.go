@@ -1,16 +1,23 @@
 package main
 
 import (
-	"back-challe-chara2022/db"
-    "back-challe-chara2022/server"
+	"fmt"
+	"log"
+	"net/http"
 )
 
 func main() {
+    port := "8080"
+    fmt.Printf("Server Listening on port %s\n", port)
 
-    // DBの初期化
-	db.InitDB()
+    http.HandleFunc("/", handler)
 
-    // サーバの初期化
-	server.Init()
+    err := http.ListenAndServe(":"+port, nil)
+    if err != nil {
+        log.Fatal("fatal err: ", err)
+    }
+}
 
+func handler(w http.ResponseWriter, r *http.Request) {
+    fmt.Fprintf(w, "Hello, World!")
 }

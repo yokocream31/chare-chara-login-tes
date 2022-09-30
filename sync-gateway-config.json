@@ -4,7 +4,7 @@
     "interface": ":4984",
     "databases": {
         "db": {
-            "server": "couchbases://couch_db",
+            "server": "http://localhost:8091",
             "bucket": "default",
             "users": {
                 "GUEST": { "disabled": false, "admin_channels": ["*"] }
