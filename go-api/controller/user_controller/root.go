@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"context"
-	"time"
 	
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -26,6 +25,10 @@ type UserIconResponse struct {
 
 type UserCommunityResponse struct {
 	UserCommunity []string `json:"userCommunity"`
+}
+
+type UserStatusResponse struct {
+	IsUpdated bool `json:"isUpdated"`
 }
 
 type DocCommunity struct {
@@ -71,7 +74,6 @@ func (uc UserController) PatchUserStatus(c *gin.Context) {
 	update_fields := bson.M{
 		"$set": bson.M{
 			"status": doc_stamp["status"].(string),
-			"updatedAt": time.Now(),
 		},
 	}
 	filter := bson.M{"_id": user_id}
@@ -86,7 +88,17 @@ func (uc UserController) PatchUserStatus(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, result)
+	fmt.Println(result)
+
+	var response UserStatusResponse
+
+	if result.ModifiedCount > 0 {
+		response.IsUpdated = true
+	} else {
+		response.IsUpdated = false
+	}
+
+	c.JSON(http.StatusOK, response)
 	return
 }
 
