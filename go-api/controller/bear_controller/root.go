@@ -3,6 +3,8 @@ package bear_controller
 import (
 	"back-challe-chara2022/entity/request_entity/body"
 	"back-challe-chara2022/db"
+	"back-challe-chara2022/entity/db_entity"
+
 
 	"net/http"
 	"fmt"
@@ -35,6 +37,9 @@ type BearCustomResponse struct {
 	BearTone primitive.ObjectID `json:"bearTone"`
 }
 
+type DocTalk struct {
+	Talk []db_entity.Talk `json:"talk"`
+}
 
 
 // POST: /bear/<str: user_id>
@@ -51,18 +56,62 @@ func (bc BearController) PostResponse(c *gin.Context) {
 		return
 	}
 
-	user_id := c.Param("user_id")
+	user_id, _ := primitive.ObjectIDFromHex(c.Param("user_id"))
 	fmt.Println(user_id) // debug message
 
-	// 仮レスポンス
-	response := [8]string{"そうだよね", "もう一回最初から教えてよ", "そこってどういうことなの？", 
-						"頑張ってるやん！", "もうちょっと詰めてみようよ！", "君がそんなに考えてわかんないなら，誰もわかんないよ！", 
-						"今，頭が回らないだけで少し時間を空けて考えたらわかる時もあるよ！", "それはもう心が１回休めって言ってるんだよ"}
+	// 送られてきた内容（message）はDBに保存
+	var err error
+	communicationCollection := db.MongoClient.Database("insertDB").Collection("communications")
+	docCommunication := &db_entity.Communication{
+		Id: primitive.NewObjectID(),
+		UserId: user_id,
+		Messages: request.Message,
+	}
+	_, err = communicationCollection.InsertOne(context.TODO(), docCommunication)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"result": err.Error()})
+		return
+	}
+
+	// ランダムにresponseを返却
+	userCollection := db.MongoClient.Database("insertDB").Collection("users")
+	var doc bson.M
+	// 検索条件
+	filter := bson.M{"_id": user_id}
+	// query
+	if err := userCollection.FindOne(context.TODO(), filter, 
+		options.FindOne().SetProjection(bson.M{"bearTone": 1, "_id": 0})).Decode(&doc); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"result": err.Error()})
+		return
+	} else if err == mongo.ErrNoDocuments {
+		fmt.Printf("No document was found with the user_id")
+		c.JSON(http.StatusOK, gin.H{})
+		return
+	}
+
+	bearToneCollection := db.MongoClient.Database("insertDB").Collection("bearTones")
+	var doc_bearTone bson.Raw
+	if err := bearToneCollection.FindOne(context.TODO(), bson.M{"_id": doc["bearTone"]}, 
+		options.FindOne().SetProjection(bson.M{"talk.response": 1, "_id": 0})).Decode(&doc_bearTone); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"result": err.Error()})
+		return
+	} else if err == mongo.ErrNoDocuments {
+		fmt.Printf("No document was found with the tone_id")
+		c.JSON(http.StatusOK, gin.H{})
+		return
+	}
+
+	var d_tmp DocTalk
+	// 配列の型を確定させるためにbsonを構造体に変換
+	err = bson.Unmarshal(doc_bearTone, &d_tmp)
+
+	var response []string
+	for _, v := range d_tmp.Talk {
+		response = append(response, v.Response)
+	}
 
 	rand.Seed(time.Now().UnixNano())
     var idx int = rand.Intn(8)
-	fmt.Println(idx)
-
 	talk := BearResponse{Response: response[idx]}
 
 	c.JSON(http.StatusOK, talk)
@@ -114,15 +163,12 @@ func (bc BearController) GetHistory(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"result": err.Error()})
 		return
 	}
-	fmt.Println(results) // 空
-
 
 	var messages []string
 	var dates []primitive.DateTime
 	for _, r := range results {
 		fmt.Printf("%T\n", r["createdAt"])
 		messages = append(messages, r["messages"].(string))
-		// unixtime, _ := strconv.Atoi(r["createdAt"].(string))
 		dates = append(dates, r["createdAt"].(primitive.DateTime))
 	}
 
@@ -163,7 +209,7 @@ func (bc BearController) GetCustom(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"result": err.Error()})
 		return
 	} else if err == mongo.ErrNoDocuments {
-		fmt.Printf("No document was found with the user_id")
+		fmt.Printf("No document was found with the bear_id")
 		c.JSON(http.StatusOK, gin.H{})
 		return
 	}
