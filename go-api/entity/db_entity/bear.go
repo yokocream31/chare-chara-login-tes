@@ -69,26 +69,10 @@ func (b *BearTone) MarshalBSON() ([]byte, error) {
     return bson.Marshal((*my)(b))
 }
 
-// CommunicationのSubCollection
-type Messages struct {
-	Id uint `json:"id" bson:"id"`
-	Text string `json:"text" bson:"text"`
-	CreatedAt  time.Time  `json:"createdAt" bson:"createdAt"`
-}
-
-// Auto Create CreatedAt, UpdatedAt
-func (m *Messages) MarshalBSON() ([]byte, error) {
-    if m.CreatedAt.IsZero() {
-        m.CreatedAt = time.Now()
-    }
-    type my Messages
-    return bson.Marshal((*my)(m))
-}
-
 type Communication struct {
 	Id primitive.ObjectID `json:"id" bson:"_id"`
 	UserId primitive.ObjectID `json:"userId" bson:"userId"`
-	Messages []Messages `json:"messages" bson:"messages"`
+	Messages string `json:"messages" bson:"messages"`
 	CreatedAt  time.Time  `json:"createdAt" bson:"createdAt"`
 	UpdatedAt  time.Time  `json:"updatedAt" bson:"updatedAt"`
 	DeletedAt  *time.Time `json:"deletedAt" bson:"deletedAt"`

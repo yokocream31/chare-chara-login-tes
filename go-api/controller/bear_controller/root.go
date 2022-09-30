@@ -10,6 +10,7 @@ import (
 	"math/rand"
 	"io/ioutil"
 	"context"
+	// "strconv"
 	
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -25,7 +26,8 @@ type BearResponse struct {
 }
 
 type BearHistoryResponse struct {
-	Message []string `json:"message"`
+	Messages []string `json:"message"`
+	Dates []primitive.DateTime `json:"date"`
 }
 
 type BearCustomResponse struct {
@@ -83,30 +85,26 @@ func (bc BearController) GetHistory(c *gin.Context) {
 	} else if request.Start.IsZero() {
 		request.Start = time.Now()
 	}
-
+	
 	user_id, _ := primitive.ObjectIDFromHex(c.Param("user_id"))
 	fmt.Println(user_id) // debug message
 
 	comCollection := db.MongoClient.Database("insertDB").Collection("communications")
 	// 検索条件
 	filter := bson.M{
-		"_id": user_id, 
-		"messages": bson.M{
-			"createdAt": bson.M{
-				"$lte": request.Start,
-			},
-		},
+		"userId": user_id, 
+		"createdAt": bson.D{{"$lte", request.Start}},
 	}
 	var cur *mongo.Cursor
 	var err error
-	findOptions := options.Find().SetProjection(bson.M{"_id": 0, "messages" : 1}).SetLimit(10).SetSort(bson.D{{"createdAt", -1}})
+	findOptions := options.Find().SetProjection(bson.M{"_id": 0, "messages" : 1, "createdAt": 1}).SetLimit(10).SetSort(bson.D{{"createdAt", -1}})
 	// findOptions := options.Find().SetProjection(bson.M{"_id": 0, "messages" : 1}).SetLimit(10).SetSort(bson.M{"messages": bson.M{"createdAt": -1}})
 	cur, err = comCollection.Find(context.TODO(), filter, findOptions)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"result": err.Error()})
 		return
 	} else if err == mongo.ErrNoDocuments {
-		fmt.Printf("No document was found with the user_id")
+		fmt.Println("No document was found with the user_id")
 		c.JSON(http.StatusOK, gin.H{})
 		return
 	}
@@ -118,10 +116,17 @@ func (bc BearController) GetHistory(c *gin.Context) {
 	}
 	fmt.Println(results) // 空
 
-	
-	message := []string{"aaaaaa", "iiiii", "uuuuu", "eeeee", "ooooo"}
 
-	response := BearHistoryResponse{Message: message}
+	var messages []string
+	var dates []primitive.DateTime
+	for _, r := range results {
+		fmt.Printf("%T\n", r["createdAt"])
+		messages = append(messages, r["messages"].(string))
+		// unixtime, _ := strconv.Atoi(r["createdAt"].(string))
+		dates = append(dates, r["createdAt"].(primitive.DateTime))
+	}
+
+	response := BearHistoryResponse{Messages: messages, Dates: dates}
 
 	c.JSON(http.StatusOK, response)
 }

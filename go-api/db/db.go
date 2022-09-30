@@ -4,11 +4,15 @@ import (
 	"context"
 	"os"
 	"fmt"
+	"reflect"
+	"time"
 
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.mongodb.org/mongo-driver/mongo/readpref"
-	// "go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/bsoncodec"
+	"go.mongodb.org/mongo-driver/bson/bsonoptions"
 	// "go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -24,7 +28,14 @@ func InitDB() {
 
 	var err error
 	// Create a new client and connect to the server
-	MongoClient, err = mongo.Connect(ctx, options.Client().ApplyURI(os.Getenv("MONGO_URI")))
+	// 接続先の設定
+	opt := options.Client().ApplyURI(os.Getenv("MONGO_URI"))
+	// timezoneの設定
+	rb := bson.NewRegistryBuilder()
+	rb.RegisterTypeDecoder(reflect.TypeOf(time.Time{}), bsoncodec.NewTimeCodec(bsonoptions.TimeCodec().SetUseLocalTimeZone(true)))
+	opt.SetRegistry(rb.Build())
+
+	MongoClient, err = mongo.Connect(ctx, opt)
 	if err != nil {
 		panic(err)
 	}
@@ -37,12 +48,4 @@ func InitDB() {
     } else {
         fmt.Println("connection success:")
     }
-
-	// test : success
-	// coll := MongoClient.Database("insertDB").Collection("haikus")
-	// doc := bson.D{{"title", "Record of a Shriveled Datum"}, {"text", "No bytes, no problem. Just insert a document, in MongoDB"}}
-	// _, err = coll.InsertOne(context.TODO(), doc)
-	// if err != nil {
-	// 	panic(err)
-	// }
 }

@@ -157,17 +157,72 @@ func main() {
 
 	// communicationCollection init
 	communicationCollection := db.MongoClient.Database("insertDB").Collection("communications")
-	messages := []db_entity.Messages{ 
-		db_entity.Messages{ Id: 1, Text: "Hello" }, 
-		db_entity.Messages{ Id: 2, Text: "World" }, 
-	}
-	docCommunication := &db_entity.Communication {
-		Id: primitive.NewObjectID(),
-		UserId: docUser.UserId,
-		Messages: messages,
+
+
+	docCommunication := []interface{}{
+		&db_entity.Communication {
+			Id: primitive.NewObjectID(),
+			UserId: docUser.UserId,
+			Messages: "Hello",
+		},
+		&db_entity.Communication {
+			Id: primitive.NewObjectID(),
+			UserId: docUser.UserId,
+			Messages: "H",
+		},
+		&db_entity.Communication {
+			Id: primitive.NewObjectID(),
+			UserId: docUser.UserId,
+			Messages: "He",
+		},
+		&db_entity.Communication {
+			Id: primitive.NewObjectID(),
+			UserId: docUser.UserId,
+			Messages: "Hel",
+		},
+		&db_entity.Communication {
+			Id: primitive.NewObjectID(),
+			UserId: docUser.UserId,
+			Messages: "Hell",
+		},
+		&db_entity.Communication {
+			Id: primitive.NewObjectID(),
+			UserId: docUser.UserId,
+			Messages: "aiueo",
+		},
+		&db_entity.Communication {
+			Id: primitive.NewObjectID(),
+			UserId: docUser.UserId,
+			Messages: "zcv",
+		},
+		&db_entity.Communication {
+			Id: primitive.NewObjectID(),
+			UserId: docUser.UserId,
+			Messages: "sdfg",
+		},
+		&db_entity.Communication {
+			Id: primitive.NewObjectID(),
+			UserId: docUser.UserId,
+			Messages: "dfgh",
+		},
+		&db_entity.Communication {
+			Id: primitive.NewObjectID(),
+			UserId: docUser.UserId,
+			Messages: "osjdfo",
+		},
+		&db_entity.Communication {
+			Id: primitive.NewObjectID(),
+			UserId: docUser.UserId,
+			Messages: "lfssk",
+		},
+		&db_entity.Communication {
+			Id: primitive.NewObjectID(),
+			UserId: docUser.UserId,
+			Messages: "wert",
+		},
 	}
 
-	_, err7 := communicationCollection.InsertOne(context.TODO(), docCommunication) // ここでMarshalBSON()される
+	_, err7 := communicationCollection.InsertMany(context.TODO(), docCommunication) // ここでMarshalBSON()される
 	if err7 != nil {
 		fmt.Println("Error inserting Communication")
         panic(err7)
