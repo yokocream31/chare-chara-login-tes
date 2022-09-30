@@ -24,6 +24,15 @@ type UserIconResponse struct {
 	UserIcon []byte `json:"userIcon"`
 }
 
+type UserCommunityResponse struct {
+	UserCommunity []string `json:"userCommunity"`
+}
+
+type DocCommunity struct {
+	Id primitive.ObjectID `json:"id"`
+	CommunityId []string `json:"communityId"`
+}
+
 // PATCH: /user/status/<uuid: user_id>
 func (uc UserController) PatchUserStatus(c *gin.Context) {
 
@@ -93,7 +102,8 @@ func (uc UserController) GetUserCommunity(c *gin.Context) {
 	var err error
 
 	userCollection := db.MongoClient.Database("insertDB").Collection("users")
-	var doc_filter bson.M
+
+	var doc_filter bson.Raw
 	// 検索条件
 	filter := bson.D{{"_id", user_id}}
 	// query the user collection
@@ -106,23 +116,36 @@ func (uc UserController) GetUserCommunity(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{})
 		return
 	}
+	var d_tmp DocCommunity
 
-	var doc_community bson.M
-	// 検索条件
-	filter_community := bson.M{"_id": doc_filter["communityId"]}
-	// query the community collection
-	communityCollection := db.MongoClient.Database("insertDB").Collection("communities")
-	err = communityCollection.FindOne(context.TODO(), filter_community, options.FindOne().SetProjection(bson.M{"communityName": 1, "_id": 0})).Decode(&doc_community)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"result": err.Error()})
-		return
-	} else if err == mongo.ErrNoDocuments {
-		fmt.Printf("No document was found with the user_id")
-		c.JSON(http.StatusOK, gin.H{})
-		return
+	// 配列の型を確定させるためにbsonを構造体に変換
+	err = bson.Unmarshal(doc_filter, &d_tmp)
+
+	var response UserCommunityResponse
+
+	for _, doc := range d_tmp.CommunityId {
+
+		var doc_community bson.M
+		// 検索条件
+		id, _ := primitive.ObjectIDFromHex(doc)
+ 		filter_community := bson.M{"_id": id}
+		// query the community collection
+		communityCollection := db.MongoClient.Database("insertDB").Collection("communities")
+		err = communityCollection.FindOne(context.TODO(), filter_community, options.FindOne().SetProjection(bson.M{"communityName": 1, "_id": 0})).Decode(&doc_community)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"result": err.Error()})
+			return
+		} else if err == mongo.ErrNoDocuments {
+			fmt.Printf("No document was found with the user_id")
+			c.JSON(http.StatusOK, gin.H{})
+			return
+		}
+
+		response.UserCommunity = append(response.UserCommunity, doc_community["communityName"].(string))
+
 	}
 
-	c.JSON(http.StatusOK, doc_community)
+	c.JSON(http.StatusOK, response)
 	return
 
 

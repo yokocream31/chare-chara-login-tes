@@ -113,6 +113,8 @@ func main() {
 	userCollection := db.MongoClient.Database("insertDB").Collection("users")
 	var question_id_array []primitive.ObjectID
 	var like_id_array []primitive.ObjectID
+	var community_id_array []primitive.ObjectID
+	community_id_array = append(community_id_array, communityId)
 	docUser := &db_entity.User{
 		UserId: primitive.NewObjectID(),
 		UserName: "test",
@@ -120,7 +122,7 @@ func main() {
 		Password: "password",
 		Icon: "img_dir/test.png",
 		Profile: "test",
-		CommunityId: communityId,
+		CommunityId: community_id_array,
 		Status: "スッキリ",
 		Role: db_entity.Role{RoleName: "admin", Permission: 7},
 		BearIcon: bearId,

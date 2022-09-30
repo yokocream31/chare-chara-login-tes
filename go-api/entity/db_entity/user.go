@@ -19,7 +19,7 @@ type User struct {
 	Password string `json:"password" bson:"password"`
 	Icon string	 `json:"icon" bson:"icon"`
 	Profile string `json:"profile" bson:"profile"`
-	CommunityId primitive.ObjectID `json:"communityId" bson:"communityId"`
+	CommunityId []primitive.ObjectID `json:"communityId" bson:"communityId"`
 	Status string `json:"status" bson:"status"`
 	Role Role `json:"role" bson:"role"`
 	BearIcon primitive.ObjectID `json:"bearIcon" bson:"bearIcon"`
