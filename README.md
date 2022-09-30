@@ -11,3 +11,4 @@
 | bugfix | バグ修正 |
 | setup | セットアップ |
 | release | リリース |
+| develop | ローカルでの実行環境 |
